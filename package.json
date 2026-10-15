@@ -1,0 +1,32 @@
+{
+  "name": "decide",
+  "version": "0.1.0",
+  "description": "Fast, cheap System One typed decisions for agents (yes/no, choice, score)",
+  "type": "module",
+  "bin": {
+    "decide": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepare": "npm run build"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@clack/prompts": "^0.10.0",
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "@napi-rs/keyring": "^1.2.0",
+    "commander": "^13.1.0",
+    "smol-toml": "^1.3.1",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.1"
+  }
+}
