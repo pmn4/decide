@@ -1,9 +1,4 @@
-import {
-  parseQuestionsFile,
-  readJsonFromPathOrStdin,
-  readJsonlContexts,
-  type FanContext,
-} from "./batch.js";
+import type { FanContext } from "./batch.js";
 import { loadConfig, profileConcurrency, resolveProfile } from "./config.js";
 import { validateQuestionCommandMode } from "./mode.js";
 import { buildSingleQuestion } from "./questions.js";
@@ -16,9 +11,7 @@ export interface QuestionCommandInput {
   qFlags: string[];
   sFlag?: string;
   stateInline?: unknown;
-  questionsPath?: string;
   questionsInline?: Question[];
-  contextsPath?: string;
   contextsInline?: FanContext[];
   name?: string;
   concurrency?: number;
@@ -29,8 +22,8 @@ export interface QuestionCommandInput {
 
 export async function dispatchQuestionCommand(input: QuestionCommandInput) {
   const config = loadConfig();
-  const hasQuestionsSwitch = Boolean(input.questionsPath || input.questionsInline);
-  const hasContextsSwitch = Boolean(input.contextsPath || input.contextsInline);
+  const hasQuestionsSwitch = Boolean(input.questionsInline);
+  const hasContextsSwitch = Boolean(input.contextsInline);
 
   const mode = validateQuestionCommandMode({
     command: input.kind,
@@ -43,9 +36,7 @@ export async function dispatchQuestionCommand(input: QuestionCommandInput) {
   const questionName = input.name ?? "q";
 
   if (mode === "multi_questions") {
-    const questions =
-      input.questionsInline ??
-      parseQuestionsFile(await readJsonFromPathOrStdin(input.questionsPath!));
+    const questions = input.questionsInline!;
     const state =
       input.stateInline ?? (input.sFlag ? await resolveState(input.sFlag) : undefined);
     if (state === undefined) {
@@ -68,8 +59,7 @@ export async function dispatchQuestionCommand(input: QuestionCommandInput) {
     } catch (e) {
       throw new RunnerError("invalid", e instanceof Error ? e.message : String(e));
     }
-    const contexts =
-      input.contextsInline ?? (await readJsonlContexts(input.contextsPath!));
+    const contexts = input.contextsInline!;
     const { name } = resolveProfile(config, input.profile);
     const concurrency = input.concurrency ?? profileConcurrency(config, name);
     return runFanDecision(question, contexts, concurrency, {

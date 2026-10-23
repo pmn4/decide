@@ -1,6 +1,12 @@
 #!/usr/bin/env node
 import { Command } from "commander";
 import { readFileSync } from "node:fs";
+import {
+  contextsBatchActive,
+  questionsBatchActive,
+  resolveContextsInput,
+  resolveQuestionsInput,
+} from "./cli-input.js";
 import { dispatchQuestionCommand } from "./dispatch.js";
 import { handleCliError, finishFanOutput, finishSuccessOutput, machineMode, printJson } from "./io.js";
 import { loadConfig, profileConcurrency, resolveProfile } from "./config.js";
@@ -29,8 +35,28 @@ function addQuestionFlags(cmd: Command, withChoice: boolean, withScore: boolean)
   cmd
     .option("-q, --question <text>", "Question instructions (exactly one unless --questions/--contexts)", (v, prev: string[]) => [...prev, v], [])
     .option("-s, --state <state>", "Context: literal, @file, or - for stdin")
-    .option("--questions <file|->", "Many questions over one shared -s (single engine request when possible)")
-    .option("--contexts <file.jsonl|->", "One question (-q) across many contexts (JSONL {id,state})")
+    .option(
+      "--questions [source]",
+      "Batch: file, @file, -, inline JSON ([...] or {...}), and/or --ask (one shared -s)",
+      (value: string | undefined) => (value === undefined ? true : value),
+    )
+    .option(
+      "--ask <name=instructions>",
+      "With --questions: add a named question (repeatable; uses command kind and -o/-l)",
+      (v, prev: string[]) => [...prev, v],
+      [],
+    )
+    .option(
+      "--contexts [source]",
+      "Fan: JSONL/@file/-, inline JSON array, and/or -c/--context (one -q)",
+      (value: string | undefined) => (value === undefined ? true : value),
+    )
+    .option(
+      "-c, --context <id=source>",
+      "With --contexts: one context (id defaults to index; source is text, @file, or -)",
+      (v, prev: string[]) => [...prev, v],
+      [],
+    )
     .option("--name <id>", "Answer id for single-question mode", "q")
     .option("--concurrency <n>", "Parallel requests for --contexts (default from config)");
   if (withChoice) {
@@ -55,16 +81,37 @@ async function runQuestionKind(
       ? Number(opts.concurrency)
       : profileConcurrency(config, resolved.name);
 
+  const askPairs = (opts.ask as string[]) ?? [];
+  const contextPairs = (opts.context as string[]) ?? [];
+  const questionsFlag = opts.questions as string | boolean | undefined;
+  const contextsFlag = opts.contexts as string | boolean | undefined;
+  const optionFlags = (opts.option as string[]) ?? [];
+  const levelFlags = (opts.level as string[]) ?? [];
+
+  const questionsInline = questionsBatchActive(questionsFlag, askPairs.length)
+    ? await resolveQuestionsInput({
+        kind,
+        questionsFlag,
+        askPairs,
+        optionFlags,
+        levelFlags,
+      })
+    : undefined;
+
+  const contextsInline = contextsBatchActive(contextsFlag, contextPairs.length)
+    ? await resolveContextsInput({ contextsFlag, contextPairs })
+    : undefined;
+
   const out = await dispatchQuestionCommand({
     kind,
     qFlags: opts.question as string[],
     sFlag: opts.state as string | undefined,
-    questionsPath: opts.questions as string | undefined,
-    contextsPath: opts.contexts as string | undefined,
+    questionsInline,
+    contextsInline,
     name: opts.name as string | undefined,
     concurrency,
-    optionFlags: opts.option as string[] | undefined,
-    levelFlags: opts.level as string[] | undefined,
+    optionFlags,
+    levelFlags,
     profile,
   });
 
