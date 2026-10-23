@@ -45,7 +45,7 @@ export function validateQuestionCommandMode(opts: {
     if (opts.qCount > 0) {
       throw new RunnerError(
         "invalid",
-        `With --questions, put questions in the file (not -q). Use -s for the shared context only.`,
+        `With --questions, put questions in the file, inline JSON, or --ask (not -q). Use -s for the shared context only.`,
       );
     }
     if (opts.sCount !== 1) {

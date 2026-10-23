@@ -107,21 +107,44 @@ Exactly one `-q` and one `-s` unless you use the batch switches below.
 
 ### Batch switches (explicit only)
 
-Never inferred from input shape. `--questions` and `--contexts` together, or multiple `-q`/`-s` without the matching switch → `invalid`.
+Never inferred from input shape (except inline JSON is recognized only when the `--questions` / `--contexts` value starts with `[` or `{`). `--questions` and `--contexts` together, or multiple `-q`/`-s` without the matching switch → `invalid`.
 
-**Many questions, one context** — `--questions <file|->` + one `-s`:
+`-s` and every context/question source accept **literal text**, **`@file`**, or **`-`** (stdin). Inline JSON is not guessed from other shapes.
+
+#### Many questions, one shared `-s`
+
+| Form | Example |
+|------|---------|
+| File | `decide yesno --questions triage.json -s @ticket.txt` |
+| `@file` | `decide yesno --questions @triage.json -s @ticket.txt` |
+| Stdin | `decide yesno --questions - -s @ticket.txt < triage.json` |
+| Inline JSON | `decide yesno --questions '[{"name":"urgent","type":"yesno","instructions":"Urgent?"}]' -s "ctx"` |
+| `--ask` only | `decide yesno --questions --ask urgent="Urgent?" --ask spam="Spam?" -s @evidence.txt` |
+| Mixed | `decide yesno --questions @batch.json --ask extra="One more?" -s @ctx.txt` |
+
+`--ask name=instructions` is repeatable, uses the subcommand kind (and shared `-o` / `-l` for choice/score). Mixed question types are allowed in JSON files.
+
+Heredoc-friendly (shell):
 
 ```bash
-decide yesno --questions triage.json -s @ticket.txt
+decide yesno --questions - -s @ticket.txt <<'JSON'
+[{"name":"a","type":"yesno","instructions":"A?"}]
+JSON
 ```
 
-Mixed question types in the file are allowed.
+#### One question, many contexts
 
-**One question, many contexts** — one `-q` + `--contexts <file.jsonl|->` (lines: `{"id","state"}`):
+| Form | Example |
+|------|---------|
+| JSONL file | `decide choice -q "Spam?" --contexts lines.jsonl -o spam=yes -o ham=no` |
+| `@file` JSONL | `decide choice -q "Spam?" --contexts @lines.jsonl -o spam=yes -o ham=no` |
+| Stdin JSONL | `decide yesno -q "OK?" --contexts - < lines.jsonl` |
+| Inline JSON | `decide yesno -q "OK?" --contexts '["ctx A","ctx B"]'` |
+| Inline objects | `decide yesno -q "OK?" --contexts '[{"id":"a","state":"@a.txt"},{"state":"plain"}]'` |
+| `-c` / `--context` | `decide yesno -q "OK?" --contexts -c @a.txt -c b=@b.txt` |
+| `-c` only | `decide yesno -q "OK?" --contexts --context first=alpha --context second=beta` |
 
-```bash
-decide choice -q "Spam?" --contexts lines.jsonl -o spam=yes -o ham=no
-```
+Repeatable `-c id=source`: omit `id` to use the index (`0`, `1`, …). `source` is resolved like `-s` (`@file`, `-`, or literal).
 
 Concurrency: `--concurrency` or `concurrency` in config (global or per profile).
 
