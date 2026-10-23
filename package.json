@@ -1,8 +1,16 @@
 {
   "name": "decide",
   "version": "0.1.0",
-  "description": "Fast, cheap System One typed decisions for agents (yes/no, choice, score)",
+  "description": "Multi-engine System One CLI for agents (yes/no, choice, score)",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pmn4/decide.git"
+  },
+  "bugs": {
+    "url": "https://github.com/pmn4/decide/issues"
+  },
+  "homepage": "https://github.com/pmn4/decide#readme",
   "bin": {
     "decide": "./dist/cli.js"
   },

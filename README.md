@@ -6,11 +6,24 @@ Built-in engines (v1): **TypeSafe Jev** and **OpenAI Decisions**. The adapter in
 
 ## Install
 
+**From GitHub** (global CLI; `prepare` runs `tsc` after install):
+
 ```bash
-npm install
-npm run build
-npm link   # optional: put `decide` on your PATH
+npm install -g github:pmn4/decide
+# if github.com/pmn4/decide is taken, use github:pmn4/decide-cli instead
+decide --help
 ```
+
+**From a clone** (development):
+
+```bash
+git clone https://github.com/pmn4/decide.git
+cd decide
+npm install   # runs prepare → build
+npm link      # optional: put `decide` on your PATH
+```
+
+Requires **Node 20+**. Not published to npm.
 
 ## Auth
 
@@ -208,4 +221,4 @@ npm test
 
 ## License
 
-MIT — not published to npm.
+[MIT](LICENSE) — not published to npm.
