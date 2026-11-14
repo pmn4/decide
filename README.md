@@ -6,13 +6,14 @@ Built-in engines (v1): **TypeSafe Jev** and **OpenAI Decisions**. The adapter in
 
 ## Install
 
-**From GitHub** (global CLI; `prepare` runs `tsc` after install):
+**From the latest release** (prebuilt; no build step on install):
 
 ```bash
-npm install -g github:pmn4/decide
-# if github.com/pmn4/decide is taken, use github:pmn4/decide-cli instead
+npm install -g https://github.com/pmn4/decide/releases/download/v0.1.0/decide-0.1.0.tgz
 decide --help
 ```
+
+`npm install -g github:pmn4/decide` does not work: npm's global git installs skip dev dependencies during `prepare`, so `tsc` is missing.
 
 **From a clone** (development):
 
@@ -23,7 +24,7 @@ npm install   # runs prepare → build
 npm link      # optional: put `decide` on your PATH
 ```
 
-Requires **Node 20+**. Not published to npm.
+Requires **Node 20+**. Not published to the npm registry; releases ship a tarball on GitHub.
 
 ## Auth
 
